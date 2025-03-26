@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-dark: #1a202c; /* Deep navy for dark mode background */
+  --primary-light: #f7fafc; /* Soft white for light mode background */
+  --accent-teal: #38b2ac; /* Vibrant teal for buttons and highlights */
+  --accent-gold: #d4af37; /* Gold for subtle accents */
+  --text-dark: #e2e8f0; /* Light gray for text in dark mode */
+  --text-light: #2d3748; /* Dark gray for text in light mode */
+  --card-bg-dark: rgba(
+    45,
+    55,
+    72,
+    0.8
+  ); /* Semi-transparent card in dark mode */
+  --card-bg-light: rgba(
+    255,
+    255,
+    255,
+    0.9
+  ); /* Semi-transparent card in light mode */
+}
+
+body {
+  background: var(--primary-dark);
+  color: var(--text-dark);
+  font-family: 'Inter', sans-serif; /* A modern, professional font */
+  position: relative;
+  overflow-x: hidden;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Light mode */
+@media (prefers-color-scheme: light) {
+  body {
+    background: var(--primary-light);
+    color: var(--text-light);
+  }
+}
+
+/* Neumorphic effect for cards */
+.neumorphic {
+  background: var(--card-bg-dark);
+  border-radius: 1rem;
+  box-shadow:
+    8px 8px 16px rgba(0, 0, 0, 0.2),
+    -8px -8px 16px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+@media (prefers-color-scheme: light) {
+  .neumorphic {
+    background: var(--card-bg-light);
+    box-shadow:
+      8px 8px 16px rgba(0, 0, 0, 0.1),
+      -8px -8px 16px rgba(255, 255, 255, 0.6);
+  }
+}
+
+/* Gradient button */
+.gradient-btn {
+  background: linear-gradient(
+    135deg,
+    var(--accent-teal) 0%,
+    var(--accent-gold) 100%
+  );
+}
+
+/* Glowing animation */
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px var(--accent-teal);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--accent-teal);
+  }
+}
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
