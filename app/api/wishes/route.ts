@@ -79,7 +79,8 @@ export async function POST(req: NextRequest) {
   const cacheKey = `wishes:${session.user.email}`
   await redis.del(cacheKey)
 
-  return NextResponse.json({ message: 'Wish added successfully' })
+  const newWish = user.wishes[user.wishes.length - 1];
+  return NextResponse.json(newWish, { status: 201 }); // Return the newly created wish and status 201
 }
 
 export async function PATCH(req: NextRequest) {
@@ -120,5 +121,5 @@ export async function PATCH(req: NextRequest) {
   const cacheKey = `wishes:${session.user.email}`
   await redis.del(cacheKey)
 
-  return NextResponse.json({ message: 'Wish updated successfully' })
+  return NextResponse.json(wish); // Return the updated wish sub-document
 }

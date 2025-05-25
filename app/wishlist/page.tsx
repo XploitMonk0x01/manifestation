@@ -18,6 +18,7 @@ export default function Wishlist() {
   const [wishes, setWishes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [isSending, setIsSending] = useState(false)
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function Wishlist() {
     if (!wish.trim()) return
     setIsSending(true)
     setError('')
+    setSuccessMessage('')
     try {
       const res = await fetch('/api/wishes', {
         method: 'POST',
@@ -65,9 +67,12 @@ export default function Wishlist() {
         body: JSON.stringify({ text: wish }),
       })
       if (res.ok) {
-        const newWish = { text: wish, date: new Date() }
-        setWishes([...wishes, newWish])
-        setWish('')
+        // Assuming the API returns the created wish including its date
+        const createdWish = await res.json(); // Or use the optimistic update if API doesn't return the full wish
+        setWishes(prevWishes => [...prevWishes, createdWish]);
+        setWish('');
+        setSuccessMessage('Your wish has been sent to the stars! ✨');
+        setTimeout(() => setSuccessMessage(''), 5000); // Auto-hide after 5 seconds
       } else {
         const text = await res.text()
         setError(`Failed to add wish: ${text}`)
@@ -100,19 +105,19 @@ export default function Wishlist() {
         <textarea
           value={wish}
           onChange={(e) => setWish(e.target.value)}
-          className="w-full p-4 rounded-lg bg-transparent text-starlight border border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-nebula-blue placeholder-starlight/50 resize-none h-32 text-lg"
+          className="w-full p-4 rounded-lg bg-transparent text-starlight border border-cosmic-purple/50 focus:outline-none focus:ring-2 focus:ring-nebula-blue placeholder-starlight/50 resize-none h-32 text-lg"
           placeholder="Speak your wish..."
           disabled={isSending}
         />
         <motion.button
           whileHover={{
             scale: 1.05,
-            boxShadow: '0 0 15px rgba(30, 144, 255, 0.5)',
+            boxShadow: '0 0 15px var(--nebula-blue)', // Use CSS variable for hover
           }}
           whileTap={{ scale: 0.95 }}
           onClick={sendWish}
           disabled={isSending}
-          className={`mt-4 w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-nebula-blue rounded-full text-white font-semibold text-lg transition-all duration-300 animate-pulseGlow ${
+          className={`mt-4 w-full px-6 py-3 bg-gradient-to-r from-cosmic-purple to-nebula-blue rounded-full text-white font-semibold text-lg transition-all duration-300 animate-pulseGlow ${
             isSending ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
@@ -147,10 +152,14 @@ export default function Wishlist() {
         {error && (
           <p className="text-red-400 text-sm mt-4 text-center">{error}</p>
         )}
+        {successMessage && (
+          <p className="text-starlight text-sm mt-4 text-center">{successMessage}</p>
+        )}
       </motion.div>
       <div className="mt-12 w-full max-w-3xl space-y-6 relative z-10">
-        {wishes.map((w, idx) => (
-          <WishCard key={idx} text={w.text} />
+        {wishes.map((w) => (
+          // Assuming 'w' will have an '_id' from MongoDB once fetched or created via API
+          <WishCard key={w._id} text={w.text} date={w.date} />
         ))}
       </div>
     </div>
