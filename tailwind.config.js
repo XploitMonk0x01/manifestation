@@ -9,6 +9,9 @@ module.exports = {
         starlight: 'var(--starlight)',
         'deep-space': 'var(--deep-space)',
       },
+      fontFamily: {
+        orbitron: ['Orbitron', 'sans-serif'],
+      },
     },
   },
   plugins: [],
