@@ -77,8 +77,8 @@ body {
 .gradient-btn {
   background: linear-gradient(
     135deg,
-    var(--accent-teal) 0%,
-    var(--accent-gold) 100%
+    var(--cosmic-purple) 0%,
+    var(--nebula-blue) 100%
   );
 }
 
@@ -86,10 +86,10 @@ body {
 @keyframes glow {
   0%,
   100% {
-    box-shadow: 0 0 10px var(--accent-teal);
+    box-shadow: 0 0 10px var(--nebula-blue);
   }
   50% {
-    box-shadow: 0 0 20px var(--accent-teal);
+    box-shadow: 0 0 20px var(--nebula-blue);
   }
 }
 .animate-glow {

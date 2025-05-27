@@ -25,11 +25,11 @@ export default function Login() {
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
       {/* Background Gradient Wave */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-accent-teal/20 to-accent-gold/20"
+        className="absolute inset-0 bg-gradient-to-r from-cosmic-purple/30 to-nebula-blue/30" // Updated initial gradient
         animate={{
           background: [
-            'linear-gradient(135deg, rgba(56, 178, 172, 0.2) 0%, rgba(212, 175, 55, 0.2) 100%)',
-            'linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(56, 178, 172, 0.2) 100%)',
+            'linear-gradient(135deg, rgba(74, 0, 224, 0.3) 0%, rgba(142, 45, 226, 0.3) 100%)', // cosmic-purple to nebula-blue
+            'linear-gradient(135deg, rgba(142, 45, 226, 0.3) 0%, rgba(74, 0, 224, 0.3) 100%)', // nebula-blue to cosmic-purple
           ],
         }}
         transition={{ duration: 5, repeat: Infinity, repeatType: 'reverse' }}
@@ -39,9 +39,9 @@ export default function Login() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="relative neumorphic p-8 rounded-2xl max-w-md w-full"
+        className="relative glass-effect p-8 rounded-2xl max-w-md w-full" // Changed neumorphic to glass-effect
       >
-        <h2 className="text-3xl md:text-4xl font-semibold mb-8 text-center">
+        <h2 className="text-3xl md:text-4xl font-orbitron font-semibold mb-8 text-center text-starlight"> {/* Updated heading style */}
           Welcome to the Universe
         </h2>
         <AuthForm />
@@ -51,7 +51,7 @@ export default function Login() {
             whileTap={{ scale: 0.95 }}
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            className={`w-full px-6 py-3 gradient-btn rounded-full text-white font-semibold text-lg transition-all duration-300 animate-glow ${
+            className={`w-full px-6 py-3 gradient-btn rounded-full text-starlight font-semibold text-lg transition-all duration-300 animate-glow ${ // Changed text-white to text-starlight
               isLoading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
