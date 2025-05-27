@@ -63,12 +63,12 @@ export default function AuthForm() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-3 pl-10 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-teal placeholder-gray-400"
+              className="w-full p-3 pl-10 rounded-lg bg-deep-space/50 text-starlight border border-nebula-blue focus:outline-none focus:ring-2 focus:ring-cosmic-purple placeholder-starlight/70"
               placeholder="Enter your username"
               required
               disabled={isLoading}
             />
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-starlight/70" />
           </div>
         </div>
       )}
@@ -82,12 +82,12 @@ export default function AuthForm() {
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 pl-10 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-teal placeholder-gray-400"
+            className="w-full p-3 pl-10 rounded-lg bg-deep-space/50 text-starlight border border-nebula-blue focus:outline-none focus:ring-2 focus:ring-cosmic-purple placeholder-starlight/70"
             placeholder="Enter your email"
             required
             disabled={isLoading}
           />
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-starlight/70" />
         </div>
       </div>
       <div className="relative">
@@ -100,12 +100,12 @@ export default function AuthForm() {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 pl-10 rounded-lg bg-gray-800/50 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-accent-teal placeholder-gray-400"
+            className="w-full p-3 pl-10 rounded-lg bg-deep-space/50 text-starlight border border-nebula-blue focus:outline-none focus:ring-2 focus:ring-cosmic-purple placeholder-starlight/70"
             placeholder="Enter your password"
             required
             disabled={isLoading}
           />
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-starlight/70" />
         </div>
       </div>
       <motion.button
@@ -113,14 +113,14 @@ export default function AuthForm() {
         whileTap={{ scale: 0.95 }}
         type="submit"
         disabled={isLoading}
-        className={`w-full px-6 py-3 gradient-btn rounded-full text-white font-semibold text-lg transition-all duration-300 animate-glow ${
+        className={`w-full px-6 py-3 gradient-btn rounded-full text-starlight font-semibold text-lg transition-all duration-300 animate-glow ${
           isLoading ? 'opacity-50 cursor-not-allowed' : ''
         }`}
       >
         {isLoading ? (
           <span className="flex items-center justify-center">
             <svg
-              className="animate-spin h-5 w-5 mr-2 text-white"
+              className="animate-spin h-5 w-5 mr-2 text-starlight"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -151,8 +151,9 @@ export default function AuthForm() {
         <p className="text-sm">
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
           <button
+            type="button"
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-accent-teal hover:underline"
+            className="text-nebula-blue hover:underline"
             disabled={isLoading}
           >
             {isSignUp ? 'Sign In' : 'Sign Up'}
