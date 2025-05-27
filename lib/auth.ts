@@ -37,8 +37,9 @@ export const authOptions: NextAuthOptions = {
         })) as MongoUser | null
         if (
           user &&
+          user.password && // Add this check
           credentials?.password &&
-          bcrypt.compareSync(credentials.password, user.password || '')
+          bcrypt.compareSync(credentials.password, user.password)
         ) {
           return {
             id: user._id.toString(),

@@ -18,37 +18,37 @@ declare global {
 }
 
 // Cached connection to avoid reconnecting on every request
-let cached = global.mongoose
+let cached: MongooseCache = global.mongoose || { conn: null, promise: null }
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null }
+if (!global.mongoose) {
+  global.mongoose = cached
 }
 
 async function connectToDatabase() {
-  if (cached!.conn) {
-    return cached!.conn
+  if (cached.conn) {
+    return cached.conn
   }
 
-  if (!cached!.promise) {
+  if (!cached.promise) {
     const opts = {
       bufferCommands: false,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
     }
 
-    cached!.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
       return mongoose
     })
   }
 
   try {
-    cached!.conn = await cached!.promise
+    cached.conn = await cached.promise
   } catch (e) {
-    cached!.promise = null
+    cached.promise = null
     throw e
   }
 
-  return cached!.conn
+  return cached.conn
 }
 
 export default connectToDatabase
