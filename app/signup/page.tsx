@@ -1,48 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import AuthForm from '../../components/AuthForm'
 import { signIn } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
+import SignupForm from '@/components/SignupForm'
+
 const ParticlesBg = dynamic(() => import('@/components/ParticlesBg'), {
   ssr: false,
 })
 
-export default function Login() {
-  const router = useRouter()
+export default function Signup() {
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const handleSignIn = async ({
-    email,
-    password,
-  }: {
-    email: string
-    password: string
-  }) => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const result = await signIn('credentials', {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError(result.error)
-      } else {
-        router.push('/wishlist')
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
@@ -81,13 +50,13 @@ export default function Login() {
             transition={{ delay: 0.3 }}
             className="mt-2 text-white/60"
           >
-            Welcome back! Please sign in to continue
+            Create your account to get started
           </motion.p>
         </div>
 
         {/* Main Card */}
         <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/5">
-          <AuthForm onSubmit={handleSignIn} error={error} />
+          <SignupForm />
 
           {/* Divider */}
           <div className="relative my-8">
@@ -116,12 +85,12 @@ export default function Login() {
 
         {/* Footer */}
         <p className="mt-8 text-center text-sm text-white/40">
-          Don't have an account?{' '}
+          Already have an account?{' '}
           <a
-            href="/signup"
+            href="/login"
             className="text-nebula-blue hover:text-nebula-blue/80 transition-colors"
           >
-            Create one
+            Sign in
           </a>
         </p>
       </motion.div>

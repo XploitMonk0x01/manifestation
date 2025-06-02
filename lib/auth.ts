@@ -1,12 +1,9 @@
 import NextAuth, { NextAuthOptions, getServerSession } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { NextRequest } from 'next/server'
 import connectToDatabase from '@/lib/mongodb'
 import User from '@/models/User'
 import bcrypt from 'bcryptjs'
-import { GetServerSidePropsContext } from 'next'
-import { NextApiRequest, NextApiResponse } from 'next'
 
 interface MongoUser {
   _id: any
@@ -17,12 +14,26 @@ interface MongoUser {
   save(): Promise<MongoUser>
 }
 
-// Define the NextAuth options
+// Defensive check for required env vars
+function requiredEnv(name: string): string {
+  const value = process.env[name]
+  if (!value) throw new Error(`Missing environment variable: ${name}`)
+  return value
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: requiredEnv('GOOGLE_CLIENT_ID'),
+      clientSecret: requiredEnv('GOOGLE_CLIENT_SECRET'),
+      authorization: {
+        params: {
+          prompt: 'consent',
+          access_type: 'offline',
+          response_type: 'code',
+        },
+      },
+      allowDangerousEmailAccountLinking: true,
     }),
     CredentialsProvider({
       name: 'Credentials',
@@ -31,63 +42,99 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        await connectToDatabase()
-        const user = (await User.findOne({
-          email: credentials?.email,
-        })) as MongoUser | null
-        if (
-          user &&
-          user.password && // Add this check
-          credentials?.password &&
-          bcrypt.compareSync(credentials.password, user.password)
-        ) {
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            throw new Error('Email and password are required')
+          }
+
+          await connectToDatabase()
+          const user = (await User.findOne({
+            email: credentials.email,
+          })) as MongoUser | null
+
+          if (!user || !user.password) {
+            throw new Error('Invalid email or password')
+          }
+
+          const isValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          )
+          if (!isValid) {
+            throw new Error('Invalid email or password')
+          }
+
           return {
             id: user._id.toString(),
             name: user.username,
             email: user.email,
+            image: user.profilePic,
           }
+        } catch (error) {
+          // Log the error but don't expose internal details
+          console.error('Auth error:', error)
+          throw new Error(
+            error instanceof Error ? error.message : 'Authentication failed'
+          )
         }
-        return null
       },
     }),
   ],
-  pages: { signIn: '/login' },
+  pages: {
+    signIn: '/login',
+    error: '/auth/error',
+    verifyRequest: '/auth/verify-request',
+  },
   callbacks: {
     async signIn({ user, account, profile }: any) {
-      await connectToDatabase()
-      let dbUser = (await User.findOne({
-        email: user.email,
-      })) as MongoUser | null
-      if (!dbUser) {
-        const newUser = new User({
-          username: user.name || user.email.split('@')[0],
+      try {
+        await connectToDatabase()
+        let dbUser = (await User.findOne({
           email: user.email,
-          profilePic: user.image || '',
-        }) as MongoUser
-        dbUser = await newUser.save()
+        })) as MongoUser | null
+
+        if (!dbUser) {
+          const newUser = new User({
+            username: user.name || user.email.split('@')[0],
+            email: user.email,
+            profilePic: user.image || '',
+          }) as MongoUser
+          dbUser = await newUser.save()
+        }
+
+        user.id = dbUser._id.toString()
+        return true
+      } catch (error) {
+        console.error('Error in signIn callback:', error)
+        return false
       }
-      user.id = dbUser._id.toString()
-      return true
     },
     async jwt({ token, user }: any) {
-      if (user) token.id = user.id
+      if (user) {
+        token.id = user.id
+      }
       return token
     },
     async session({ session, token }: any) {
-      session.user.id = token.id
+      if (session.user) {
+        ;(session.user as any).id = token.id
+      }
       return session
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: requiredEnv('NEXTAUTH_SECRET'),
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  debug: process.env.NODE_ENV === 'development',
 }
 
-// Helper function to get the session in API routes
-export async function getSession(req: NextRequest) {
+export async function getSession(req?: any) {
   return await getServerSession(authOptions)
 }
 
-// Helper function to check if a user is authenticated
-export async function isAuthenticated(req: NextRequest) {
-  const session = await getSession(req)
+export async function isAuthenticated() {
+  const session = await getSession()
   return !!session
 }

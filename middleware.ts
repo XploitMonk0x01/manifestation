@@ -1,108 +1,77 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getSession, isAuthenticated } from "@/lib/auth";
-import rateLimit from "express-rate-limit";
-import RedisStore from "rate-limit-redis";
-import Redis from "ioredis";
-import type { Redis as RedisType } from "ioredis";
-import { Session } from "next-auth";
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { LRUCache } from 'lru-cache'
 
-// Initialize Redis client for rate limiting
-const redisClient = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
+export const runtime = 'edge'
 
-// Define session user type
-interface CustomSession extends Session {
-  user: {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-  }
-}
-
-// Custom rate limiter middleware for Next.js
-async function rateLimiterMiddleware(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for") || "anonymous";
-  const key = `rate-limit:${ip}`;
-  
-  try {
-    const requests = await redisClient.incr(key);
-    
-    if (requests === 1) {
-      await redisClient.expire(key, 15 * 60); // 15 minutes in seconds
-    }
-    
-    if (requests > 100) { // 100 requests per 15 minutes
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Rate limiter error:", error);
-    return true; // Allow request on Redis error
-  }
-}
+// Initialize rate limiter with more lenient limits
+const rateLimit = new LRUCache({
+  max: 1000, // Store more IPs
+  ttl: 1000 * 60, // 1 minute TTL
+})
 
 // Define public routes that don't require authentication
-const publicRoutes = ["/api/auth", "/api/public-wishes"];
+const publicRoutes = ['/api/auth', '/api/public-wishes', '/login', '/signup']
 
 // Define routes that should be rate-limited
-const rateLimitedRoutes = ["/api/wishes", "/api/profile", "/api/public-wishes"];
+const rateLimitedRoutes = ['/api/wishes', '/api/profile']
 
-export async function middleware(req: NextRequest) {
-  // 1. Logging: Log every request for debugging and monitoring
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+// Custom rate limiter middleware for Next.js with Edge compatibility
+async function rateLimiterMiddleware(req: NextRequest): Promise<boolean> {
+  const ip =
+    req.headers.get('x-forwarded-for') ||
+    req.headers.get('x-real-ip') ||
+    '127.0.0.1'
 
-  // 2. CORS Handling: Add CORS headers for API routes
-  const response = NextResponse.next();
-  if (req.nextUrl.pathname.startsWith("/api")) {
-    response.headers.set("Access-Control-Allow-Origin", "*"); // Adjust this for production
-    response.headers.set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
-    response.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  const pathname = req.nextUrl.pathname
+  const key = `${ip}:${pathname}`
+
+  const currentCount = (rateLimit.get(key) as number) || 0
+
+  // Increased rate limit to 60 requests per minute
+  if (currentCount >= 60) {
+    return false
   }
 
-  // Handle OPTIONS requests for CORS preflight
-  if (req.method === "OPTIONS") {
-    return response;
-  }
-
-  // 3. Rate Limiting: Apply rate limiting to specific API routes
-  const shouldRateLimit = rateLimitedRoutes.some((route) =>
-    req.nextUrl.pathname.startsWith(route)
-  );
-  
-  if (shouldRateLimit) {
-    const isAllowed = await rateLimiterMiddleware(req);
-    if (!isAllowed) {
-      return NextResponse.json(
-        { error: "Too many requests" },
-        { status: 429 }
-      );
-    }
-  }
-
-  // 4. Authentication Check: Skip for public routes, enforce for protected routes
-  const isPublicRoute = publicRoutes.some((route) =>
-    req.nextUrl.pathname.startsWith(route)
-  );
-
-  if (!isPublicRoute && req.nextUrl.pathname.startsWith("/api")) {
-    const session = await getSession(req) as CustomSession | null;
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    // Now TypeScript knows session.user exists and has an id
-    response.headers.set("x-user-id", session.user.id);
-  }
-
-  // 5. Error Handling: Catch any errors thrown in the API routes
-  try {
-    return response;
-  } catch (error) {
-    console.error("Middleware error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  rateLimit.set(key, currentCount + 1)
+  return true
 }
 
-// Configure which routes the middleware applies to
+export async function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname
+
+  // Skip middleware for public routes and static files
+  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+    return NextResponse.next()
+  }
+
+  // Apply rate limiting for specific routes
+  if (rateLimitedRoutes.some((route) => pathname.startsWith(route))) {
+    const isAllowed = await rateLimiterMiddleware(req)
+    if (!isAllowed) {
+      return NextResponse.json(
+        { error: 'Too many requests, please try again later' },
+        { status: 429 }
+      )
+    }
+  }
+
+  // Add security headers
+  const response = NextResponse.next()
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains'
+  )
+
+  return response
+}
+
 export const config = {
-  matcher: "/api/:path*", // Apply middleware to all API routes
-};
+  matcher: [
+    // Match all paths except static files, images, and auth routes
+    '/((?!_next/static|_next/image|favicon.ico|public/|api/auth/).*)',
+  ],
+}

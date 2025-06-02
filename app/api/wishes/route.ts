@@ -3,25 +3,42 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]/route'
 import connectToDatabase from '@/lib/mongodb'
 import User from '@/models/User'
-import redis from '@/lib/redis'
-import rateLimit from 'express-rate-limit'
+import cache from '@/lib/cache'
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  keyGenerator: (req: NextRequest) =>
-    req.headers.get('x-forwarded-for') || 'anonymous',
-})
+// Rate limiting with LRU Cache
+const rateLimitCache = new Map()
+const RATE_LIMIT_DURATION = 60 * 1000 // 1 minute
+const RATE_LIMIT_MAX = 60 // 60 requests per minute
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const userRequests = rateLimitCache.get(ip) || []
+
+  // Remove old requests
+  const validRequests = userRequests.filter(
+    (timestamp: number) => now - timestamp < RATE_LIMIT_DURATION
+  )
+
+  if (validRequests.length >= RATE_LIMIT_MAX) {
+    return true
+  }
+
+  validRequests.push(now)
+  rateLimitCache.set(ip, validRequests)
+  return false
+}
 
 export async function GET(req: NextRequest) {
-  try {
-    await new Promise((resolve, reject) => {
-      limiter(req as any, {} as any, (err) =>
-        err ? reject(err) : resolve(null)
-      )
-    })
-  } catch (err) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const ip =
+    req.headers.get('x-forwarded-for') ||
+    req.headers.get('x-real-ip') ||
+    '127.0.0.1'
+
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests, please try again later' },
+      { status: 429 }
+    )
   }
 
   const session = await getServerSession(authOptions)
@@ -30,9 +47,9 @@ export async function GET(req: NextRequest) {
   }
 
   const cacheKey = `wishes:${session.user.email}`
-  const cachedWishes = await redis.get(cacheKey)
+  const cachedWishes = cache.get(cacheKey)
   if (cachedWishes) {
-    return NextResponse.json(JSON.parse(cachedWishes))
+    return NextResponse.json(cachedWishes)
   }
 
   await connectToDatabase()
@@ -42,19 +59,21 @@ export async function GET(req: NextRequest) {
   }
 
   const wishes = user.wishes || []
-  await redis.set(cacheKey, JSON.stringify(wishes), 'EX', 3600)
+  cache.set(cacheKey, wishes)
   return NextResponse.json(wishes)
 }
 
 export async function POST(req: NextRequest) {
-  try {
-    await new Promise((resolve, reject) => {
-      limiter(req as any, {} as any, (err) =>
-        err ? reject(err) : resolve(null)
-      )
-    })
-  } catch (err) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const ip =
+    req.headers.get('x-forwarded-for') ||
+    req.headers.get('x-real-ip') ||
+    '127.0.0.1'
+
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests, please try again later' },
+      { status: 429 }
+    )
   }
 
   const session = await getServerSession(authOptions)
@@ -77,21 +96,23 @@ export async function POST(req: NextRequest) {
   await user.save()
 
   const cacheKey = `wishes:${session.user.email}`
-  await redis.del(cacheKey)
+  cache.delete(cacheKey)
 
-  const newWish = user.wishes[user.wishes.length - 1];
-  return NextResponse.json(newWish, { status: 201 }); // Return the newly created wish and status 201
+  const newWish = user.wishes[user.wishes.length - 1]
+  return NextResponse.json(newWish, { status: 201 })
 }
 
 export async function PATCH(req: NextRequest) {
-  try {
-    await new Promise((resolve, reject) => {
-      limiter(req as any, {} as any, (err) =>
-        err ? reject(err) : resolve(null)
-      )
-    })
-  } catch (err) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+  const ip =
+    req.headers.get('x-forwarded-for') ||
+    req.headers.get('x-real-ip') ||
+    '127.0.0.1'
+
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests, please try again later' },
+      { status: 429 }
+    )
   }
 
   const session = await getServerSession(authOptions)
@@ -119,7 +140,7 @@ export async function PATCH(req: NextRequest) {
   await user.save()
 
   const cacheKey = `wishes:${session.user.email}`
-  await redis.del(cacheKey)
+  cache.delete(cacheKey)
 
-  return NextResponse.json(wish); // Return the updated wish sub-document
+  return NextResponse.json(wish)
 }

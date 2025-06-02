@@ -1,39 +1,37 @@
 import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
 import { authOptions } from '@/lib/auth'
-import { motion } from 'framer-motion' // Import motion
+import HomeContent from './HomeContent'
 
 export default async function Home() {
-  const session = await getServerSession(authOptions)
+  let session = null
+  try {
+    session = await getServerSession(authOptions)
+  } catch (err) {
+    // Optionally log error or show a fallback UI
+  }
   if (session) redirect('/wishlist')
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-deep-space via-cosmic-purple to-nebula-blue flex flex-col items-center justify-center text-center px-4">
-      <motion.h1
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="text-5xl md:text-6xl text-starlight font-orbitron mb-6 text-glow-starlight"
-      >
-        Cast Your Wishes to the Cosmos
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.3 }}
-        className="text-lg md:text-xl text-starlight/80 font-orbitron mb-8 max-w-2xl"
-      >
-        A sanctuary for your hopes, dreams, and desires. Send your messages out
-        into the universe and let the starlight carry them.
-      </motion.p>
-      <motion.p
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut', delay: 0.6 }}
-        className="text-md text-starlight/60 font-orbitron"
-      >
-        Login or Sign Up to begin your journey.
-      </motion.p>
-    </div>
+    <main className="relative min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-cosmic-purple/60 to-nebula-blue/60">
+      {/* Optional: Add a background effect */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {/* You can use your ParticlesBg here if desired */}
+      </div>
+      <section className="z-10 flex flex-col items-center text-center px-6 py-16 rounded-2xl bg-black/60 shadow-2xl backdrop-blur-md max-w-xl">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-starlight mb-4 drop-shadow-lg">
+          Messages to the Universe
+        </h1>
+        <p className="text-lg md:text-xl text-starlight/80 mb-8">
+          Whisper your wishes to the cosmos and see them shine among the stars.
+        </p>
+        <a
+          href="/login"
+          className="inline-block px-8 py-3 rounded-full bg-gradient-to-r from-cosmic-purple to-nebula-blue text-white font-semibold shadow-lg hover:scale-105 transition-transform"
+        >
+          Get Started
+        </a>
+      </section>
+    </main>
   )
 }

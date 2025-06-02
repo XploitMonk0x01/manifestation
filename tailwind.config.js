@@ -4,10 +4,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'cosmic-purple': 'var(--cosmic-purple)',
-        'nebula-blue': 'var(--nebula-blue)',
-        starlight: 'var(--starlight)',
-        'deep-space': 'var(--deep-space)',
+        'cosmic-purple': '#6B4DE6',
+        'nebula-blue': '#3B82F6',
+        starlight: '#FFFFFF',
       },
       fontFamily: {
         orbitron: ['Orbitron', 'sans-serif'],
