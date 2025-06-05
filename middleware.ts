@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { LRUCache } from 'lru-cache'
 
-export const runtime = 'experimental-edge'
-
 // Initialize rate limiter with more lenient limits
 const rateLimit = new LRUCache({
   max: 1000, // Store more IPs
