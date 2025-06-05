@@ -1,8 +1,9 @@
+'use client'
+
 import { Box, Button, Typography } from '@mui/material'
 import Paper from '@mui/material/Paper'
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import AuthErrorDisplay from '@/components/AuthErrorDisplay'
 
 const errors: { [key: string]: string } = {
   Configuration: 'There is a problem with the server configuration.',
@@ -12,19 +13,19 @@ const errors: { [key: string]: string } = {
 }
 
 export default function ErrorPage() {
-  const searchParams = useSearchParams()
   const router = useRouter()
-  const errorType = searchParams.get('error')
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
+  const errorMessage = error && (errors[error] || errors.Default)
 
   useEffect(() => {
-    if (errorType && errors[errorType]) {
-      // Log the specific error for debugging
-      console.error('Auth Error:', errors[errorType])
+    if (!error) {
+      router.push('/login')
     }
-  }, [errorType])
+  }, [error, router])
 
-  const handleBackToHome = () => {
-    router.push('/')
+  if (!error) {
+    return null
   }
 
   return (
@@ -44,24 +45,31 @@ export default function ErrorPage() {
           zIndex: 2,
         }}
       >
-        <Box textAlign="center" mb={2}>
-          <Typography variant="h5" component="h1" gutterBottom>
+        <Box textAlign="center">
+          <Typography variant="h6" fontWeight={600} color="error" mb={2}>
             Authentication Error
           </Typography>
-          <Typography variant="body1" color="textSecondary">
-            {errorType && errors[errorType]
-              ? errors[errorType]
-              : errors.Default}
+          <Typography color="text.secondary" mb={3}>
+            {errorMessage}
           </Typography>
+          <Button
+            onClick={() => router.push('/login')}
+            variant="contained"
+            sx={{
+              mt: 2,
+              py: 1.5,
+              fontWeight: 700,
+              fontSize: 16,
+              background: 'linear-gradient(90deg, #f472b6, #a78bfa, #fde68a)',
+              color: '#fff',
+              '&:hover': {
+                background: 'linear-gradient(90deg, #a78bfa, #f472b6, #fde68a)',
+              },
+            }}
+          >
+            Return to Sign In
+          </Button>
         </Box>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleBackToHome}
-          fullWidth
-        >
-          Back to Home
-        </Button>
       </Paper>
     </div>
   )
