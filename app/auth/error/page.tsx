@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Paper from '@mui/material/Paper'
 
 const errors: { [key: string]: string } = {
   Configuration: 'There is a problem with the server configuration.',
@@ -28,7 +29,21 @@ export default function ErrorPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-6 bg-white rounded-lg shadow-md">
+      <Paper
+        elevation={10}
+        sx={{
+          p: { xs: 2, sm: 4, md: 6 },
+          borderRadius: { xs: 3, md: 6 },
+          maxWidth: 520,
+          width: '100%',
+          mx: 'auto',
+          background: 'rgba(30, 27, 75, 0.85)',
+          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 2,
+        }}
+      >
         <div className="text-center">
           <h1 className="text-xl font-semibold text-red-600 mb-4">
             Authentication Error
@@ -41,7 +56,7 @@ export default function ErrorPage() {
             Return to Sign In
           </button>
         </div>
-      </div>
+      </Paper>
     </div>
   )
 }

@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import connectToDatabase from '../../../lib/mongodb'
 import User from '../../../models/User'
-import { authOptions } from '../auth/[...nextauth]/route' // Import authOptions
+import { authOptions } from '@/lib/auth'
 import { promises as fs } from 'fs'
 import path from 'path'
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session) return new Response('Unauthorized', { status: 401 })
+  if (!session?.user) return new Response('Unauthorized', { status: 401 })
 
   await connectToDatabase()
-  const user = await User.findById(session.user.id)
+  const user = await User.findOne({ email: session.user.email })
   if (!user) return new Response('User not found', { status: 404 })
 
   return NextResponse.json({
@@ -22,10 +22,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions)
-  if (!session) return new Response('Unauthorized', { status: 401 })
+  if (!session?.user) return new Response('Unauthorized', { status: 401 })
 
   await connectToDatabase()
-  const user = await User.findById(session.user.id)
+  const user = await User.findOne({ email: session.user.email })
   if (!user) return new Response('User not found', { status: 404 })
 
   const formData = await req.formData()
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   if (profilePic) {
     const uploadDir = path.join(process.cwd(), 'public/uploads')
     await fs.mkdir(uploadDir, { recursive: true })
-    const fileName = `${session.user.id}-${Date.now()}.${profilePic.name
+    const fileName = `${session.user.email}-${Date.now()}.${profilePic.name
       .split('.')
       .pop()}`
     const filePath = path.join(uploadDir, fileName)

@@ -3,6 +3,16 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
+import {
+  Box,
+  TextField,
+  Button,
+  Avatar,
+  Typography,
+  CircularProgress,
+  Paper,
+} from '@mui/material'
+import { AutoAwesome as SparkleIcon } from '@mui/icons-material'
 
 export default function ProfileForm({
   setError,
@@ -78,92 +88,116 @@ export default function ProfileForm({
     }
   }
 
+  const buttonSx = {
+    py: 1.5,
+    fontWeight: 700,
+    fontSize: 18,
+    background: 'linear-gradient(90deg, #f472b6, #a78bfa, #38bdf8)',
+    color: '#fff',
+    boxShadow: '0 4px 20px 0 rgba(168,139,250,0.25)',
+    mt: 2,
+    transition: 'all 0.2s',
+    '&:hover': {
+      background: 'linear-gradient(90deg, #a78bfa, #f472b6, #38bdf8)',
+    },
+  }
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-      <div>
-        <label
-          htmlFor="username"
-          className="block text-sm font-medium text-starlight"
+    <Paper
+      elevation={8}
+      sx={{
+        p: 4,
+        borderRadius: 4,
+        background: 'rgba(30, 27, 75, 0.85)',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        maxWidth: 420,
+        mx: 'auto',
+        mt: 4,
+      }}
+    >
+      <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+        <SparkleIcon sx={{ color: '#fde68a', fontSize: 38, mb: 1 }} />
+        <Typography
+          variant="h5"
+          fontWeight={700}
+          sx={{
+            background: 'linear-gradient(90deg, #a78bfa, #f472b6, #fde68a)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            mb: 1,
+          }}
         >
-          Cosmic Name
-        </label>
-        <input
-          type="text"
-          id="username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 mt-1 rounded-lg bg-transparent text-starlight border border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-nebula-blue placeholder-starlight/50"
-          placeholder="Your universal moniker"
-          required
-          disabled={isSubmitting}
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="profilePic"
-          className="block text-sm font-medium text-starlight"
-        >
-          Starlit Avatar
-        </label>
-        <input
-          type="file"
-          id="profilePic"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="w-full p-3 mt-1 rounded-lg bg-transparent text-starlight border border-purple-500 file:bg-purple-500 file:text-white file:border-0 file:rounded file:px-4 file:py-2"
-          disabled={isSubmitting}
-        />
-        {preview && (
-          <motion.img
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            src={preview}
-            alt="Profile Preview"
-            className="mt-4 w-32 h-32 rounded-full object-cover border-2 border-nebula-blue mx-auto shadow-lg animate-pulseGlow"
+          Your Cosmic Profile
+        </Typography>
+        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+          <TextField
+            label="Cosmic Name"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            fullWidth
+            margin="normal"
+            required
+            InputProps={{
+              style: { color: 'white', background: 'rgba(255,255,255,0.07)' },
+            }}
+            InputLabelProps={{ style: { color: '#e0e7ff' } }}
+            disabled={isSubmitting}
           />
-        )}
-      </div>
-      <motion.button
-        whileHover={{
-          scale: 1.05,
-          boxShadow: '0 0 15px rgba(30, 144, 255, 0.5)',
-        }}
-        whileTap={{ scale: 0.95 }}
-        type="submit"
-        disabled={isSubmitting}
-        className={`w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-nebula-blue rounded-full text-white font-semibold text-lg transition-all duration-300 animate-pulseGlow ${
-          isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-      >
-        {isSubmitting ? (
-          <span className="flex items-center justify-center">
-            <svg
-              className="animate-spin h-5 w-5 mr-2 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
+          <Box mt={2} mb={2} textAlign="center">
+            <input
+              accept="image/*"
+              style={{ display: 'none' }}
+              id="profilePic-upload"
+              type="file"
+              onChange={handleFileChange}
+              disabled={isSubmitting}
+            />
+            <label htmlFor="profilePic-upload">
+              <Button
+                variant="outlined"
+                component="span"
+                sx={{
+                  color: '#a78bfa',
+                  borderColor: '#a78bfa',
+                  fontWeight: 600,
+                  mb: 1,
+                }}
+                disabled={isSubmitting}
+              >
+                Upload Starlit Avatar
+              </Button>
+            </label>
+            {preview && (
+              <Avatar
+                src={preview}
+                alt="Profile Preview"
+                sx={{
+                  width: 96,
+                  height: 96,
+                  mx: 'auto',
+                  mt: 2,
+                  border: '2px solid #38bdf8',
+                  boxShadow: '0 0 16px #a78bfa88',
+                }}
               />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v8H4z"
-              />
-            </svg>
-            Binding...
-          </span>
-        ) : (
-          'Bind to the Cosmos'
-        )}
-      </motion.button>
-    </form>
+            )}
+          </Box>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={buttonSx}
+            disabled={isSubmitting}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={22} color="inherit" />
+              ) : null
+            }
+          >
+            {isSubmitting ? 'Binding...' : 'Bind to the Cosmos'}
+          </Button>
+        </form>
+      </Box>
+    </Paper>
   )
 }

@@ -127,14 +127,14 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: false,
 }
 
 export async function getSession(req?: any) {
   return await getServerSession(authOptions)
 }
 
-export async function isAuthenticated() {
+export async function isAuthenticated(req: Request) {
   const session = await getSession()
   return !!session
 }

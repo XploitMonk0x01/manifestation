@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth'
 import connectToDatabase from '@/lib/mongodb'
 import User from '@/models/User'
 import cache from '@/lib/cache'
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
   }
 
   const session = await getServerSession(authOptions)
-  if (!session) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -53,12 +53,21 @@ export async function GET(req: NextRequest) {
   }
 
   await connectToDatabase()
+  interface UserType {
+    email: string
+    wishes: { text: string; date: Date; isPublic: boolean }[]
+  }
+
   const user = await User.findOne({ email: session.user.email }).lean()
   if (!user) {
     return NextResponse.json({ error: 'User not found' }, { status: 404 })
   }
+  const typedUser = user as unknown as UserType
+  if (!typedUser) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  }
 
-  const wishes = user.wishes || []
+  const wishes = typedUser.wishes || []
   cache.set(cacheKey, wishes)
   return NextResponse.json(wishes)
 }
@@ -77,7 +86,7 @@ export async function POST(req: NextRequest) {
   }
 
   const session = await getServerSession(authOptions)
-  if (!session) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -116,7 +125,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   const session = await getServerSession(authOptions)
-  if (!session) {
+  if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

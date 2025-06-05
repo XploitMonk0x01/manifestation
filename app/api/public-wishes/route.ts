@@ -4,6 +4,7 @@ import connectToDatabase from '@/lib/mongodb'
 import User from '@/models/User'
 import cache from '@/lib/cache'
 import { z } from 'zod'
+import { PipelineStage } from 'mongoose'
 
 const querySchema = z.object({
   page: z.string().optional().default('1').transform(Number),
@@ -25,11 +26,11 @@ const commentSchema = z.object({
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const query = querySchema.parse({
-    page: searchParams.get('page'),
-    limit: searchParams.get('limit'),
-    sortBy: searchParams.get('sortBy'),
-    sortOrder: searchParams.get('sortOrder'),
-    search: searchParams.get('search'),
+    page: searchParams.get('page') ?? undefined,
+    limit: searchParams.get('limit') ?? undefined,
+    sortBy: searchParams.get('sortBy') ?? undefined,
+    sortOrder: searchParams.get('sortOrder') ?? undefined,
+    search: searchParams.get('search') ?? undefined,
   })
 
   const { page, limit, sortBy, sortOrder, search } = query
@@ -49,8 +50,7 @@ export async function GET(req: NextRequest) {
   if (search) {
     matchStage['wishes.text'] = { $regex: search, $options: 'i' }
   }
-
-  const pipeline = [
+  const pipeline: PipelineStage[] = [
     { $match: matchStage },
     { $unwind: '$wishes' },
     { $match: { 'wishes.isPublic': true } },
@@ -62,6 +62,10 @@ export async function GET(req: NextRequest) {
         likes: { $size: '$wishes.likes' },
         comments: '$wishes.comments',
         author: '$username',
+        user: {
+          name: '$username',
+          image: '$profilePic', // <-- fix: use profilePic, not profileImage
+        },
       },
     },
     {

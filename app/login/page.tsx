@@ -2,34 +2,43 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import AuthForm from '../../components/AuthForm'
 import { signIn } from 'next-auth/react'
 import { motion } from 'framer-motion'
+import AuthLayout from '@/components/AuthLayout'
+import Link from 'next/link'
+import {
+  TextField,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Paper,
+  Typography,
+  Divider,
+  Box,
+  CircularProgress,
+} from '@mui/material'
+import { Google as GoogleIcon } from '@mui/icons-material'
 import dynamic from 'next/dynamic'
-const ParticlesBg = dynamic(() => import('@/components/ParticlesBg'), {
-  ssr: false,
-})
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'], display: 'swap' })
 
 export default function Login() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [formData, setFormData] = useState({ email: '', password: '' })
 
-  const handleSignIn = async ({
-    email,
-    password,
-  }: {
-    email: string
-    password: string
-  }) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setIsLoading(true)
     setError(null)
 
     try {
       const result = await signIn('credentials', {
-        email,
-        password,
         redirect: false,
+        email: formData.email,
+        password: formData.password,
       })
 
       if (result?.error) {
@@ -43,88 +52,169 @@ export default function Login() {
       setIsLoading(false)
     }
   }
-
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true)
-    try {
-      await signIn('google', { callbackUrl: '/wishlist' })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-[#0B1121]">
-      <ParticlesBg />
-
-      <div className="absolute inset-0 bg-gradient-to-tr from-cosmic-purple/20 to-nebula-blue/20" />
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-        className="relative w-full max-w-lg mx-auto"
+    <Box
+      minHeight="100vh"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        background: '#0B1121',
+        position: 'relative',
+        overflow: 'hidden',
+        px: { xs: 1, sm: 2, md: 0 },
+      }}
+    >
+      <Paper
+        elevation={10}
+        className={inter.className}
+        sx={{
+          p: { xs: 2, sm: 4, md: 6 },
+          borderRadius: { xs: 3, md: 6 },
+          maxWidth: 520,
+          width: '100%',
+          mx: 'auto',
+          background: 'rgba(30, 27, 75, 0.85)',
+          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 2,
+        }}
       >
-        {/* Logo/Brand Section */}
-        <div className="text-center mb-8">
-          <motion.h1
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-3xl font-bold text-white"
+        <Box textAlign="center" mb={3}>
+          <Typography
+            variant="h4"
+            fontWeight={800}
+            sx={{
+              background: 'linear-gradient(90deg, #a78bfa, #f472b6, #fde68a)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              mb: 1,
+            }}
           >
-            Messages to <span className="text-nebula-blue">Universe</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-2 text-white/60"
+            Manifest Your Dreams ✨
+          </Typography>
+          <Typography variant="subtitle1" color="white" fontWeight={500}>
+            Sign in to send your wishes to the universe
+          </Typography>
+        </Box>
+        <form onSubmit={handleSubmit}>
+          {error && (
+            <Box mb={2}>
+              <Typography
+                color="error"
+                align="center"
+                sx={{ bgcolor: 'rgba(244,67,54,0.08)', borderRadius: 2, p: 1 }}
+              >
+                {error}
+              </Typography>
+            </Box>
+          )}
+          <TextField
+            label="Email Address"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+            autoComplete="email"
+            required
+            InputProps={{
+              style: { color: 'white', background: 'rgba(255,255,255,0.07)' },
+            }}
+            InputLabelProps={{ style: { color: '#e0e7ff' } }}
+          />
+          <TextField
+            label="Password"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            type="password"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+            autoComplete="current-password"
+            required
+            InputProps={{
+              style: { color: 'white', background: 'rgba(255,255,255,0.07)' },
+            }}
+            InputLabelProps={{ style: { color: '#e0e7ff' } }}
+          />
+          <Box
+            display="flex"
+            alignItems="center"
+            justifyContent="space-between"
+            mt={1}
+            mb={2}
           >
-            Welcome back! Please sign in to continue
-          </motion.p>
-        </div>
-
-        {/* Main Card */}
-        <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-white/5">
-          <AuthForm onSubmit={handleSignIn} error={error} />
-
-          {/* Divider */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 text-white/40 bg-[#0B1121]/95">
-                or continue with
-              </span>
-            </div>
-          </div>
-
-          {/* Social Login */}
-          <motion.button
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-            onClick={handleGoogleSignIn}
+            <FormControlLabel
+              control={<Checkbox sx={{ color: '#a78bfa' }} />}
+              label={
+                <Typography color="white" fontSize={14}>
+                  Remember me
+                </Typography>
+              }
+            />
+            <Link
+              href="/forgot-password"
+              style={{ color: '#f472b6', fontWeight: 500, fontSize: 14 }}
+            >
+              Forgot password?
+            </Link>
+          </Box>
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{
+              py: 1.5,
+              fontWeight: 700,
+              fontSize: 18,
+              background: 'linear-gradient(90deg, #f472b6, #a78bfa, #fde68a)',
+              color: '#fff',
+              boxShadow: '0 4px 20px 0 rgba(168,139,250,0.25)',
+              mb: 2,
+              mt: 1,
+              '&:hover': {
+                background: 'linear-gradient(90deg, #a78bfa, #f472b6, #fde68a)',
+              },
+            }}
             disabled={isLoading}
-            className="w-full flex items-center justify-center gap-3 px-4 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white transition-all"
+            startIcon={
+              isLoading && <CircularProgress size={22} color="inherit" />
+            }
           >
-            <img src="/google.svg" alt="Google" className="w-5 h-5" />
-            {isLoading ? 'Signing in...' : 'Continue with Google'}
-          </motion.button>
-        </div>
-
-        {/* Footer */}
-        <p className="mt-8 text-center text-sm text-white/40">
-          Don't have an account?{' '}
-          <a
-            href="/signup"
-            className="text-nebula-blue hover:text-nebula-blue/80 transition-colors"
+            {isLoading ? 'Manifesting...' : 'Sign in'}
+          </Button>
+          <Divider sx={{ my: 3, color: 'white', opacity: 0.2 }}>or</Divider>
+          <Button
+            fullWidth
+            variant="outlined"
+            startIcon={<GoogleIcon />}
+            sx={{
+              color: '#fff',
+              borderColor: '#a78bfa',
+              background: 'rgba(255,255,255,0.04)',
+              fontWeight: 600,
+              '&:hover': { background: 'rgba(168,139,250,0.08)' },
+            }}
+            onClick={() => signIn('google', { callbackUrl: '/wishlist' })}
           >
-            Create one
-          </a>
-        </p>
-      </motion.div>
-    </div>
+            Continue with Google
+          </Button>
+        </form>
+        <Box mt={4} textAlign="center">
+          <Typography color="white" fontSize={15}>
+            New to Manifestation?{' '}
+            <Link href="/signup" style={{ color: '#fde68a', fontWeight: 600 }}>
+              Create your cosmic account
+            </Link>
+          </Typography>
+        </Box>
+      </Paper>
+    </Box>
   )
 }
