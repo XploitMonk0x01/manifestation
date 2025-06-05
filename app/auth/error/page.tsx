@@ -1,8 +1,8 @@
-'use client'
-
+import { Box, Button, Typography } from '@mui/material'
+import Paper from '@mui/material/Paper'
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Paper from '@mui/material/Paper'
+import AuthErrorDisplay from '@/components/AuthErrorDisplay'
 
 const errors: { [key: string]: string } = {
   Configuration: 'There is a problem with the server configuration.',
@@ -12,19 +12,19 @@ const errors: { [key: string]: string } = {
 }
 
 export default function ErrorPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
-  const error = searchParams.get('error')
-  const errorMessage = error && (errors[error] || errors.Default)
+  const router = useRouter()
+  const errorType = searchParams.get('error')
 
   useEffect(() => {
-    if (!error) {
-      router.push('/login')
+    if (errorType && errors[errorType]) {
+      // Log the specific error for debugging
+      console.error('Auth Error:', errors[errorType])
     }
-  }, [error, router])
+  }, [errorType])
 
-  if (!error) {
-    return null
+  const handleBackToHome = () => {
+    router.push('/')
   }
 
   return (
@@ -44,18 +44,24 @@ export default function ErrorPage() {
           zIndex: 2,
         }}
       >
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-red-600 mb-4">
+        <Box textAlign="center" mb={2}>
+          <Typography variant="h5" component="h1" gutterBottom>
             Authentication Error
-          </h1>
-          <p className="text-gray-600 mb-6">{errorMessage}</p>
-          <button
-            onClick={() => router.push('/login')}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors"
-          >
-            Return to Sign In
-          </button>
-        </div>
+          </Typography>
+          <Typography variant="body1" color="textSecondary">
+            {errorType && errors[errorType]
+              ? errors[errorType]
+              : errors.Default}
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleBackToHome}
+          fullWidth
+        >
+          Back to Home
+        </Button>
       </Paper>
     </div>
   )
